@@ -23,11 +23,11 @@ library(purrr)
 library(readr)
 library(stringr)
 # to connect to googlesheets
-library(googlesheets)
+library(googlesheets4)
 
 ## Set Study Name ----
 # Change this to suit your study name. This will also be the prefix on your final saved files.
-study<-"database.tables.example" 
+study<-"2014-12_Geographe.Bay_stereoBRUVs" 
 
 ## Folder Structure ----
 # This script uses one main folder ('working directory')
@@ -44,7 +44,7 @@ working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory
 
 ## Save these directory names to use later----
 staging.dir<-paste(working.dir,"Staging",sep="/") 
-download.dir<-paste(working.dir,"EM Export",sep="/")
+export.dir<-paste(working.dir,"EM Export",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 
 setwd(working.dir)
@@ -54,26 +54,19 @@ dir.create(file.path(working.dir, "EM Export"))
 dir.create(file.path(working.dir, "Staging"))
 dir.create(file.path(working.dir, "Tidy data"))
 
-# BEFORE CONTINUING ----
-# You should now copy your database tables into the EM Export folder 
-
 # Combine all data----
 # The below code will find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
 
 # Metadata ----
-# You will need a metadata file. This can either be a .csv file or a google sheet 
-# If using a .csv the file name MUST end in "_Metadata.csv"
-# Both csv and googlesheet will need to match the global archive format
+# You will need a metadata file.
 # See the user manual: https://globalarchivemanual.github.io/ for the correct format
 # In this example we will use a csv file (you will need to create a csv file to upload to GlobalArchive anyway but can use this script to save the file to upload to globalarchive)
 
-# For google sheet ----
-metadata<-gs_title("Paste title of labsheet here")%>%
-  gs_read_csv(ws = "paste sheet name here")%>%
-  ga.clean.names()
-
 # For csv file ----
+setwd(export.dir)
+dir()
+
 metadata <-ga.list.files("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
   purrr::map_df(~ga.read.files_em.csv(.))%>% # combine into dataframe
   dplyr::select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
@@ -86,6 +79,7 @@ write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
 ## Combine Points and Count files into maxn ----
 maxn<-ga.create.em.maxn()%>%
+  dplyr::select(-comment)%>%
   dplyr::inner_join(metadata)%>%
   dplyr::filter(successful.count=="Yes")%>%
   dplyr::filter(maxn>0)
