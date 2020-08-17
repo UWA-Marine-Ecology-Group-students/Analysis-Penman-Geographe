@@ -38,7 +38,7 @@ library(ggplot2)
 
 ## Set Study Name ----
 # Change this to suit your study name. This will also be the prefix on your final saved files.
-study<-"project.example"
+study<-"2014-12_Geographe.Bay_stereoBRUVs"
 
 ## Folder Structure ----
 # This script uses one main folder ('working directory')
@@ -53,7 +53,7 @@ study<-"project.example"
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # sets working directory to that of this script - or type your own
 
 ## Save these directory names to use later----
-to.be.checked.dir<-paste(working.dir,"Data to be checked",sep="/") 
+to.be.checked.dir<-paste(working.dir,"Staging",sep="/") 
 download.dir<-paste(working.dir,"Downloads",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 plots.dir=paste(working.dir,"Plots",sep="/")
@@ -179,10 +179,11 @@ out.of.range<-filter(length,range>10000)%>% # 10 m = 10000 mm
 # Use the abbreviation in the code below
 # currently set for the Pilbara, Australia example data set ('NW' for North-west)
 
-master<-gs_title("Australia.life.history")%>%
-  gs_read_csv(ws = "australia.life.history")%>%ga.clean.names()%>%
+url <- "https://docs.google.com/spreadsheets/d/1SMLvR9t8_F-gXapR2EemQMEPSw_bUbPLcXd3lJ5g5Bo/edit?ts=5e6f36e2#gid=825736197"
+
+master<-googlesheets4::read_sheet(url)%>%ga.clean.names()%>%
   filter(grepl('Australia', global.region))%>% # Change country here
-  filter(grepl('NW', marine.region))%>% # Select marine region (currently this is only for Australia)
+  filter(grepl('SW', marine.region))%>% # Select marine region (currently this is only for Australia)
   dplyr::mutate(all=as.numeric(all))%>%
   dplyr::mutate(bll=as.numeric(bll))%>%
   dplyr::mutate(a=as.numeric(a))%>%
@@ -191,8 +192,9 @@ master<-gs_title("Australia.life.history")%>%
   distinct()%>%
   glimpse()
 
-synonyms <- gs_title("Synonyms_Australia")%>%
-  gs_read_csv(ws = "Synonyms_Australia")%>%
+synonymsurl <- "https://docs.google.com/spreadsheets/d/1R0uU9Q0VkUDQFgGTK3VnIGxmc101jxhlny926ztWoiQ/edit?ts=5e6f37a2#gid=567803926"
+
+synonyms<- googlesheets4::read_sheet(synonymsurl)%>%
   distinct()%>%
   ga.clean.names()%>%
   select(-comment)
