@@ -36,6 +36,8 @@ metadata<-read_csv(file=paste(study,"checked.metadata.csv",sep = "."),na = c("",
   dplyr::mutate(id=paste(campaignid,sample,sep="."))%>%
   glimpse()
 
+samples<-metadata%>%distinct(sample)
+
 # read in complete maxn ----
 maxn <- read_csv(file=paste(study,"complete.maxn.csv",sep = "."),na = c("", " "))%>%
   glimpse()
@@ -63,6 +65,7 @@ length <- read_csv(file=paste(study,"complete.length.csv",sep = "."),na = c("", 
   glimpse()
 
 
+
 url <- "https://docs.google.com/spreadsheets/d/1SMLvR9t8_F-gXapR2EemQMEPSw_bUbPLcXd3lJ5g5Bo/edit?ts=5e6f36e2#gid=825736197"
 
 master<-googlesheets4::read_sheet(url)%>%ga.clean.names()%>%
@@ -82,6 +85,53 @@ no.legal.snapper <- length%>%
   tidyr::complete(nesting(sample),nesting(legal)) %>%
   replace_na(list(number = 0))
 
+no.legal.size.all<-length%>%
+  left_join(master)%>%
+  # dplyr::filter(species%in%c("auratus"))%>%
+  dplyr::mutate(legal=ifelse(length>minlegal.wa,"legal","non-legal"))%>%
+  dplyr::filter(!is.na(minlegal.wa))%>%
+  dplyr::group_by(sample,legal)%>%
+  dplyr::summarise(number=sum(number))%>%
+  dplyr::ungroup()%>%
+  tidyr::complete(nesting(sample),nesting(legal)) %>%
+  replace_na(list(number = 0))
+
+
+mass<-read_csv(file=paste(study,"complete.mass.csv",sep = "."),na = c("", " "),col_types = cols(.default = "c"))%>%
+  mutate(mass.g=as.numeric(mass.g))%>%
+  glimpse()
+
+total.mass<-mass%>%
+  replace_na(list(mass.g=0))%>%
+  dplyr::group_by(sample)%>%
+  dplyr::summarise(mass.total=sum(mass.g))%>%
+  dplyr::ungroup()%>%
+  tidyr::complete(nesting(sample)) %>%
+  full_join(samples)%>%
+  replace_na(list(mass.total = 0))
+
+mass.30cm<-mass%>%
+  mutate(length.cm=as.numeric(length.cm))%>%
+  filter(length.cm>30)%>%
+  dplyr::group_by(sample)%>%
+  dplyr::summarise(mass.30cm=sum(mass.g))%>%
+  dplyr::ungroup()%>%
+  tidyr::complete(nesting(sample)) %>%
+  full_join(samples)%>%
+  replace_na(list(mass.30cm = 0))
+
+mass.20cm<-mass%>%
+  mutate(length.cm=as.numeric(length.cm))%>%
+  filter(length.cm>20)%>%
+  dplyr::group_by(sample)%>%
+  dplyr::summarise(mass.20cm=sum(mass.g))%>%
+  dplyr::ungroup()%>%
+  tidyr::complete(nesting(sample)) %>%
+  full_join(samples)%>%
+  replace_na(list(mass.20cm = 0))
+
+mass.summaries<-left_join(total.mass,mass.20cm)%>%
+  left_join(.,mass.30cm)
 
 setwd(tidy.dir)
 dir()
@@ -90,3 +140,5 @@ write.csv(pink.snapper, file=paste(study,"pink.snapper.maxn.csv",sep = "."), row
 write.csv(king.wrasse, file=paste(study,"king.wrasse.maxn.csv",sep = "."), row.names=FALSE)
 write.csv(ta.sr, file=paste(study,"total.abundance.and.species.richness.csv",sep = "."), row.names=FALSE)
 write.csv(no.legal.snapper, file=paste(study,"legal.sized.pink.snapper.csv",sep = "."), row.names=FALSE)
+write.csv(no.legal.size.all, file=paste(study,"legal.sized.fish.csv",sep = "."), row.names=FALSE)
+write.csv(mass.summaries, file=paste(study,"mass.summaries.csv",sep = "."), row.names=FALSE)
