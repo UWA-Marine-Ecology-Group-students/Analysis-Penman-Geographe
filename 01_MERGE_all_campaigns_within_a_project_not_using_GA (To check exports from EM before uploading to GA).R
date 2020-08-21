@@ -44,13 +44,12 @@ working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory
 
 ## Save these directory names to use later----
 staging.dir<-paste(working.dir,"Staging",sep="/") 
-export.dir<-paste(working.dir,"EM Export",sep="/")
+download.dir<-paste(working.dir,"EM Export",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 
 setwd(working.dir)
 
 ## Create EM Export, Staging and Tidy data folders ----
-dir.create(file.path(working.dir, "EM Export"))
 dir.create(file.path(working.dir, "Staging"))
 dir.create(file.path(working.dir, "Tidy data"))
 
@@ -64,7 +63,7 @@ dir.create(file.path(working.dir, "Tidy data"))
 # In this example we will use a csv file (you will need to create a csv file to upload to GlobalArchive anyway but can use this script to save the file to upload to globalarchive)
 
 # For csv file ----
-setwd(export.dir)
+setwd(download.dir)
 dir()
 
 metadata <-ga.list.files("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
@@ -98,4 +97,3 @@ length3dpoints<-ga.create.em.length3dpoints()%>%
 ## Save length files ----
 setwd(staging.dir)
 write.csv(length3dpoints,paste(study,"length3dpoints.csv",sep="_"),row.names = FALSE)
-

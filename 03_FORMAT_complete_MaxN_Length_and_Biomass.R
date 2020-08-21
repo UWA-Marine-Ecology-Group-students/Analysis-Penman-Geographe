@@ -30,7 +30,7 @@ install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
 # To connect to life.history
 library(httpuv)
-library(googlesheets)
+library(googlesheets4)
 # To tidy data
 library(tidyr)
 library(plyr)
@@ -41,7 +41,7 @@ library(ggplot2)
 library(fst)
 
 # Study name---
-study<-"project.example" ## change for your project
+study<-"2014-12_Geographe.Bay_stereoBRUVs" ## change for your project
 
 ## Set your working directory ----
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
@@ -135,15 +135,16 @@ ggplot(data=expanded.length, aes(y=as.numeric(length))) +
 # Make mass data from complete.length.number----
 # There are 6 steps
 # 1. use life.history---
-master<-gs_title("Australia.life.history")%>%
-  gs_read_csv(ws = "australia.life.history")%>%ga.clean.names()%>%
-  filter(grepl('Australia', global.region))%>%
-  filter(grepl('NW', marine.region))%>%
+url <- "https://docs.google.com/spreadsheets/d/1SMLvR9t8_F-gXapR2EemQMEPSw_bUbPLcXd3lJ5g5Bo/edit?ts=5e6f36e2#gid=825736197"
+
+master<-googlesheets4::read_sheet(url)%>%ga.clean.names()%>%
+  filter(grepl('Australia', global.region))%>% # Change country here
+  filter(grepl('SW', marine.region))%>% # Select marine region (currently this is only for Australia)
   dplyr::mutate(all=as.numeric(all))%>%
   dplyr::mutate(bll=as.numeric(bll))%>%
   dplyr::mutate(a=as.numeric(a))%>%
   dplyr::mutate(b=as.numeric(b))%>%
-  select(family,genus,species,marine.region,length.measure,a,b,all,bll,fb.length_max,fb.ltypemaxm)%>% 
+  select(family,genus,species,marine.region,length.measure,a,b,all,bll,fb.length_max,fb.ltypemaxm)%>%
   distinct()%>%
   glimpse()
 
