@@ -5,7 +5,7 @@
 
 ### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
 
-rm(list=ls()) # Clear memory
+rm(list=ls())# Clear memory
 
 ## Load Libraries ----
 # To connect to GlobalArchive
@@ -50,8 +50,8 @@ tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 setwd(working.dir)
 
 ## Create EM Export, Staging and Tidy data folders ----
-dir.create(file.path(working.dir, "Staging"))
-dir.create(file.path(working.dir, "Tidy data"))
+##dir.create(file.path(working.dir, "Staging"))
+##dir.create(file.path(working.dir, "Tidy data"))
 
 # Combine all data----
 # The below code will find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
@@ -62,14 +62,24 @@ dir.create(file.path(working.dir, "Tidy data"))
 # See the user manual: https://globalarchivemanual.github.io/ for the correct format
 # In this example we will use a csv file (you will need to create a csv file to upload to GlobalArchive anyway but can use this script to save the file to upload to globalarchive)
 
+
+setwd(tidy.dir)
+dir()
+samples<-read.csv("2014-12_Geographe.Bay_stereoBRUVs_samples_completed.csv")%>%
+  ga.clean.names()%>%
+  glimpse()
+
 # For csv file ----
 setwd(download.dir)
 dir()
 
 metadata <-ga.list.files("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
   purrr::map_df(~ga.read.files_em.csv(.))%>% # combine into dataframe
-  dplyr::select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
+  dplyr::select(campaignid,sample,latitude,longitude,date,time,location,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
+  dplyr::semi_join(samples)%>%
   glimpse()
+
+
 
 unique(metadata$campaignid) # check the number of campaigns in metadata, and the campaign name
 
@@ -87,13 +97,3 @@ maxn<-ga.create.em.maxn()%>%
 setwd(staging.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
-## Combine Length, Lengths and 3D point files into length3dpoints----
-length3dpoints<-ga.create.em.length3dpoints()%>%
-  dplyr::select(-c(time,comment))%>% # take time out as there is also a time column in the metadata
-  dplyr::inner_join(metadata)%>%
-  dplyr::filter(successful.length=="Yes")%>%
-  glimpse()
-
-## Save length files ----
-setwd(staging.dir)
-write.csv(length3dpoints,paste(study,"length3dpoints.csv",sep="_"),row.names = FALSE)

@@ -26,6 +26,7 @@ working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory
 
 ## Save these directory names to use later---- 
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
+em.dir<-paste(working.dir,"EM Export",sep="/")
 
 # Read in the data----
 setwd(tidy.dir)
@@ -40,6 +41,14 @@ samples<-metadata%>%distinct(sample)
 
 # read in complete maxn ----
 maxn <- read_csv(file=paste(study,"complete.maxn.csv",sep = "."),na = c("", " "))%>%
+  glimpse()
+
+setwd(em.dir)
+dir()
+habitat<- read.csv("stereo-BRUVs_broad.percent.cover.csv")%>%
+  dplyr::filter(campaignid=="2014-12_Geographe_Bay_stereoBRUVs")%>%
+  ga.clean.names()%>%
+  dplyr::select(-c("latitude", "longitude", "campaignid"))%>%
   glimpse()
 
 pink.snapper <- maxn%>%
@@ -57,6 +66,30 @@ ta.sr <- maxn%>%
   dplyr::select(sample,total.abundance,species.richness)%>%
   gather(.,"scientific","maxn",2:3)%>%
   left_join(metadata)
+
+names(maxn)
+unique(maxn$scientific)
+
+wide.maxn<-maxn%>%
+  dplyr::filter(scientific%in%c("Carangidae Pseudocaranx spp",
+                                "Labridae Coris auricularis",
+                                "Gerreidae Parequula melbournensis",
+                                "Sparidae Chrysophrys auratus"))%>%
+  dplyr::select(sample, scientific, maxn)%>%
+  spread(key = scientific, value = maxn)
+
+wide.tasr<-ta.sr%>%
+  dplyr::select(sample, scientific, maxn)%>%
+  spread(key = scientific, value = maxn)
+
+gam.data<-metadata%>%
+  dplyr::left_join(.,wide.maxn)%>%
+  dplyr::left_join(.,wide.tasr)%>%
+  dplyr::left_join(.,habitat)%>%
+  glimpse()
+  
+  
+
 
 # read in length ----
 
@@ -135,6 +168,7 @@ mass.summaries<-left_join(total.mass,mass.20cm)%>%
 
 setwd(tidy.dir)
 dir()
+write.csv(gam.data, file=paste(study,"gamdata.csv",sep = "."), row.names=FALSE)
 
 write.csv(pink.snapper, file=paste(study,"pink.snapper.maxn.csv",sep = "."), row.names=FALSE)
 write.csv(king.wrasse, file=paste(study,"king.wrasse.maxn.csv",sep = "."), row.names=FALSE)
