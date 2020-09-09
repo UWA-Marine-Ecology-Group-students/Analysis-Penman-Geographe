@@ -1,0 +1,7 @@
+OpCode	ImagePtPair	FilenameLeft	FrameLeft	FilenameRight	FrameRight	Time	Period	PeriodTime	X	Y	Z	sX	sY	sZ	RMS	Range	Direction	Family	Genus	Species	Code	Number	Stage	Activity	Comment	Attribute9	Attribute10
+108	0	108_L5.avi	2213	108_R6.avi	2485	1.23068		-1.00000																	sync		
+11R2	0	11R2_L11.avi	8275	11R2_R12.avi	7883	4.60182	1	0.00000																	sync		
+11R3	0	11R3_L9.avi	6953	11R3_R10.avi	6343	3.86664	1	0.00000																	sync		
+11R4	0	11R4_L19 all good.avi	1240	11R4_R20_all good.avi	1047	0.68958		-1.00000																	sync		
+12RC2	0	12RC2_L19.avi	527	12RC2_R20.avi	1344	0.29307		-1.00000																	sync		
+78	0	78_L23.avi	903	78_R24.avi	1870	0.50217		-1.00000																	sync		
