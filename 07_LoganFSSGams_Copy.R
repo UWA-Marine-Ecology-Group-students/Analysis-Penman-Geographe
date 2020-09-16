@@ -17,7 +17,7 @@ library(stringr)
 library(readr)
 library(ggplot2)
 library(fst)
-library(FSSgam)
+
 
 # Study name---
 study<-"2014-12_Geographe.Bay_stereoBRUVs" ## change for your project
@@ -48,6 +48,7 @@ maxn <- read_csv(file=paste(study,"complete.maxn.csv",sep = "."),na = c("", " ")
 
 setwd(em.dir)
 dir()
+
 habitat<- read.csv("stereo-BRUVs_broad.percent.cover.csv")%>%
   dplyr::filter(campaignid=="2014-12_Geographe_Bay_stereoBRUVs")%>%
   ga.clean.names()%>%
@@ -61,18 +62,19 @@ king.wrasse <- maxn%>%
   filter(species%in%c("auricularis"))
 
 ta.sr <- maxn%>%
-  group_by(scientific,sample)%>%
+  dplyr::ungroup()%>%
+  dplyr::group_by(scientific,sample)%>%
   dplyr::summarise(maxn = sum(maxn))%>%
   spread(scientific,maxn, fill = 0)%>%
-  mutate(total.abundance=rowSums(.[,2:(ncol(.))],na.rm = TRUE ))%>% #Add in Totals
-  mutate(species.richness=rowSums(.[,2:159] > 0))%>%
+  dplyr::mutate(total.abundance=rowSums(.[,2:(ncol(.))],na.rm = TRUE ))%>% #Add in Totals
+  dplyr::mutate(species.richness=rowSums(.[,2:120] > 0))%>% # double check these
   dplyr::select(sample,total.abundance,species.richness)%>%
   gather(.,"scientific","maxn",2:3)%>%
-  left_join(metadata)
+  dplyr::left_join(metadata)
+
 names(maxn)
 unique(maxn$scientific)
 
-#-------------------------if using wide data-------------------------------
 wide.maxn<-maxn%>%
   dplyr::filter(scientific%in%c("Carangidae Pseudocaranx spp",
                                 "Labridae Coris auricularis",
@@ -92,28 +94,52 @@ gam.data<-metadata%>%
   mutate(reef= consolidated + sponges + stony.corals + turf.algae + macroalgae + seagrasses)%>%
   na.omit()%>%
   glimpse()
-  
- 
 
-#---------------------- now fit the models -------------------------#check long data change --------------------------------
-require(mgcv)
-require(MuMIn)
-require(doParallel)
-require(plyr)
-
-## Changed to Long data for reproducible example for Case Study 2 where response variables are stacked one upon each other
+#Changed to Long data for reproducible example for Case Study 2
 long.dat <- gam.data %>% 
-  gather (Taxa, Response, `Carangidae Pseudocaranx spp`:total.abundance)%>%
+  gather (Taxa, response, `Carangidae Pseudocaranx spp`:total.abundance)%>%
   glimpse()
-
-dat <- long.dat
-View(dat)
-
 #Set predictor variables -----
 pred.vars=c("depth","macroalgae","turf.algae","unconsolidated","seagrasses","consolidated", "sponges", "stony.corals") 
 
 #Check for correlations of predictor variables (Removing anything highly correlated (>0.95)--
 round(cor(long.dat[,pred.vars]),2)
+#re-set predictor variables (now containing reef instead)
+pred.vars=c("depth","turf.algae","seagrasses", "reef")
+
+# Check to make sure response vector has not more than 80% zeros----check for correlations
+round(cor(long.dat[,pred.vars]),2)
+
+dat <- long.dat
+name<-"geographe"
+
+#-----Above Complete for Fish summaries for Anita -----------
+
+#----------now fit the models---Using Tim Example 2-------------
+
+# Part 1-FSS modeling----
+
+# librarys----
+detach("package:plyr", unload=TRUE)#will error - don't worry
+library(tidyr)
+library(dplyr)
+options(dplyr.width = Inf) #enables head() to display all coloums
+library(mgcv)
+library(MuMIn)
+library(car)
+library(doBy)
+library(gplots)
+library(RColorBrewer)
+library(doParallel) #this can removed?
+library(doSNOW)
+library(gamm4)
+library(RCurl) #needed to download data from GitHub
+
+# install package----
+library(FSSgam)
+
+# Bring in and format data
+name<-"geographe"
 
 # Plot of likely transformations -----
 par(mfrow=c(3,2))
@@ -128,14 +154,6 @@ for (i in pred.vars) {
   plot(log(x+1))
 }
 
-#remove stony corals, sponges, consolidated, macroalgae
-#re-set predictor variables (now containing reef instead)--check for correlations
-pred.vars=c("depth","turf.algae","seagrasses", "reef")
-
-
-# Check to make sure Response vector has not more than 80% zeros----
-dat <- long.dat
-name<-"geographe"
 
 unique.vars=unique(as.character(dat$Taxa))
 unique.vars.use=character()
@@ -149,7 +167,6 @@ unique.vars.use
 # Run the full subset model selection----
 resp.vars=unique.vars.use
 use.dat=dat
-# factor.vars=c("Status")# Status as a Factor with two levels
 out.all=list()
 var.imp=list()
 
@@ -199,7 +216,7 @@ for(i in 1:length(resp.vars)){
   }
 }
 
-# Model fits and importance---
+#---Model fits and importance---
 names(out.all)=resp.vars
 names(var.imp)=resp.vars
 all.mod.fits=do.call("rbind",out.all)
@@ -213,4 +230,133 @@ heatmap.2(all.var.imp,notecex=0.4,  dendrogram ="none",
           trace="none",key.title = "",keysize=2,
           notecol="black",key=T,
           sepcolor = "black",margins=c(12,8), lhei=c(4,15),Rowv=FALSE,Colv=FALSE)
+
+#--------CHECK Part 2-----------------------------
+
+#Part 2 - custom plot of importance scores----
+setwd(models.dir)
+dat.taxa <-read.csv("geographe_all.var.imp.csv")%>% #from local copy
+  rename(resp.var=X)%>%
+  gather(key=predictor,value=importance,2:ncol(.))%>%
+  glimpse()
+
+# Plotting defaults----
+library(ggplot2)
+# Theme-
+Theme1 <-
+  theme( # use theme_get() to see available options
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.background = element_rect(fill="white"),
+    legend.key = element_blank(), # switch off the rectangle around symbols in the legend
+    legend.text = element_text(size=8),
+    legend.title = element_text(size=8, face="bold"),
+    legend.position = "top",
+    legend.direction="horizontal",
+    text=element_text(size=10),
+    strip.text.y = element_text(size = 10,angle = 0),
+    axis.title.x=element_text(vjust=0.3, size=10),
+    axis.title.y=element_text(vjust=0.6, angle=90, size=10),
+    axis.text.x=element_text(size=10,angle = 90, hjust=1,vjust=0.5),
+    axis.text.y=element_text(size=10,face="italic"),
+    axis.line.x=element_line(colour="black", size=0.5,linetype='solid'),
+    axis.line.y=element_line(colour="black", size=0.5,linetype='solid'),
+    strip.background = element_blank())
+
+
+# colour ramps-
+re <- colorRampPalette(c("mistyrose", "red2","darkred"))(200)
+
+# Labels-
+legend_title<-"Importance"
+
+# Annotations----------CHECK IF ANNOTATIONS ARE CORRECT---------------
+dat.taxa.label<-dat.taxa%>%
+  mutate(label=NA)%>%
+  mutate(label=ifelse(predictor=="depth"&resp.var=="Carangidae Pseudocaranx spp","X",label)) %>%
+  mutate(label=ifelse(predictor=="seagrasses"&resp.var=="Gerreidae Parequula melbournensis","X",label)) %>% 
+  mutate(label=ifelse(predictor=="reef"&resp.var=="Labridae Coris auricularis","X",label)) %>%
+  mutate(label=ifelse(predictor=="reef"&resp.var=="species.richness","X",label)) %>%
+  mutate(label=ifelse(predictor=="turf.algae"&resp.var=="total.abundance","X",label)) %>% 
+  glimpse()
+
+head(dat.taxa.label)
+
+# Plot gg.importance.scores ----
+gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=importance))+
+  geom_tile(show.legend=T) +
+  scale_fill_gradientn(legend_title,colours=c("white", re), na.value = "grey98",
+                       limits = c(0, max(dat.taxa.label$importance)))+
+  scale_x_discrete(limits=c("depth",
+                            "turf.algae",
+                            "seagrasses",
+                            "reef"),
+                   labels=c(
+                     "Depth",
+                     "Turf Algae",
+                     "Seagrass",
+                     "Reef"))+
+  scale_y_discrete(limits = c("Carangidae Pseudocaranx spp",
+                              "Gerreidae Parequula melbournensis",
+                              "Labridae Coris auricularis",
+                              "Sparidae Chrysophrys auratus",
+                              "species.richness",
+                              "total.abundance"),
+                   labels=c("Pseudocaranx spp",
+                            "Parequula Melbournensis",
+                            "Coris Auricularis",
+                            "Chrysophrys Auratus",
+                            "Species Richness",
+                            "Total Abundance"))+
+  xlab(NULL)+
+  ylab(NULL)+
+  theme_classic()+
+  Theme1+
+  geom_text(aes(label=label))
+gg.importance.scores #unsure of this error....?
+
+#--------CHECK IF ABOVE IS CORRECT------------------
+
+
+#--------FINISH part 3.....
+# Manually make the most parsimonious GAM models for each taxa ----
+setwd(models.dir)
+  
+# MODEL Bivalve.Dosina.subrosea 500um + distance x Status ----
+dat.bds<-dat%>%filter(Taxa=="BDS") # "Carangidae Pseudocaranx spp"
+gamm=gam(response~s(sqrt.X500um,k=3,bs='cr')+s(distance,k=1,bs='cr', by=Status)+ s(Location,Site,bs="re")+ Status, family=tw(),data=dat.bds)
+
+
+dat.cps <- # filter data --------------
+gamm <- gam(response~s(depth,k=3,bs='cr'),family=tw(),  data=dat.cps) # change predictor variable per Taxa --------
+
+
+
+#-----------------------simplified for logan-------------------
+mod<-gamm
+testdata <- expand.grid(depth=mean(mod$model$depth))%>%
+  distinct()%>%
+  glimpse()
+#
+
+fits <- predict.gam(mod, newdata=testdata, type='response', se.fit=T)
+#head(fits,2)
+predicts.bds.status = testdata%>%data.frame(fits)%>%
+  group_by(Status)%>% #only change here
+  summarise(response=mean(fit),se.fit=mean(se.fit))%>%
+  ungroup()
+write.csv(predicts.bds.status,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.bds.status<-read.csv("predicts.csv")%>%
+  glimpse()
+
+predicts.cps = testdata%>%data.frame(fits)%>%
+  summarise(response=mean(fit),se.fit=mean(se.fit))%>%
+  ungroup()
+
+write.csv(predicts.cps,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.cps<-read.csv("predicts.csv")%>%
+  glimpse()
+
+
+
 
