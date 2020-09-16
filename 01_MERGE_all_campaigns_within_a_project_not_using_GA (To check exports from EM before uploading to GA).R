@@ -46,6 +46,7 @@ working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory
 staging.dir<-paste(working.dir,"Staging",sep="/") 
 download.dir<-paste(working.dir,"EM Export",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
+models.dir<-paste(working.dir,"Models",sep="/")
 
 setwd(working.dir)
 
@@ -88,10 +89,12 @@ write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
 ## Combine Points and Count files into maxn ----
 maxn<-ga.create.em.maxn()%>%
-  dplyr::select(-comment)%>%
+  dplyr::select(-c(comment, campaignid))%>%
   dplyr::inner_join(metadata)%>%
-  dplyr::filter(successful.count=="Yes")%>%
+  #dplyr::filter(successful.count=="Yes")%>%
   dplyr::filter(maxn>0)
+
+tets <- anti_join(maxn,metadata)
 
 # Save MaxN file ----
 setwd(staging.dir)
