@@ -19,7 +19,7 @@ OpCode	TapeReader	Depth	Comment	Info5Name	Info5Value	Info6Name	Info6Value	Info7N
 12	Hayley			Bottom		Spare		Spare		Spare		Spare		Spare		Spare		Spare	
 122	Logan																		
 12RC1	Logan																		
-12RC2	Brooke Gibbons																		
+12RC2	Daphne																		
 12RC6	Logan																		
 12RC7	Logan																		
 12RC8	Logan																		
