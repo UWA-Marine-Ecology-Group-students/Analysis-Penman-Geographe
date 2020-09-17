@@ -313,7 +313,9 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
   theme_classic()+
   Theme1+
   geom_text(aes(label=label))
-gg.importance.scores #unsure of this error....?
+gg.importance.scores
+
+#dev.off()
 
 #--------CHECK IF ABOVE IS CORRECT------------------
 
