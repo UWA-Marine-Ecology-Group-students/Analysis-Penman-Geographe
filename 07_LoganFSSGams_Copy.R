@@ -316,7 +316,8 @@ gg.importance.scores
 
 #use dev.off if error above occurs
 dev.off()
-#--------FINISH part 3.....
+
+
 ### now  make a nice plot of the most interesting models-----
 
 library(gridExtra)
@@ -343,7 +344,7 @@ Theme1 <-
     strip.background = element_blank())
 
 
-# Manually make the most parsimonious GAM models for each taxa ----
+# Manually make the most parsimonious GAM models for each taxa.....1/6 done
 setwd(models.dir)
   
 # Model 1: --------Carangidae Pseudocaranx spp + Depth --------
@@ -351,7 +352,7 @@ dat.cps<-dat%>%filter(Taxa=="Carangidae Pseudocaranx spp") # "Carangidae Pseudoc
 gamm=gam(response~s(depth,k=3,bs='cr'),family=tw(),  data=dat.cps)
 gamm <- gam(response~s(depth,k=3,bs='cr'),family=tw(),  data=dat.cps) # change predictor variable per Taxa --------
 
-#Predict depth from model for Pseudicaranx spp with Depth---
+#Predict depth from model for Pseudocaranx spp with Depth---
 mod<-gamm
 testdata <- expand.grid(depth=seq(min(dat$depth),max(dat$depth),length.out = 20)) %>% 
   distinct()%>%
@@ -367,7 +368,7 @@ predicts.cps.depth<-read.csv("predicts.csv")%>%
   glimpse()
 
 
-#Plot Model for Pseudicaranx spp with Depth----
+#Plot Model for Pseudocaranx spp with Depth----
 ggmod.cps.depth<- ggplot() +
   ylab("MaxN")+
   xlab("Depth")+
