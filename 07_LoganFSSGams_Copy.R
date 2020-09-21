@@ -231,9 +231,7 @@ heatmap.2(all.var.imp,notecex=0.4,  dendrogram ="none",
           notecol="black",key=T,
           sepcolor = "black",margins=c(12,8), lhei=c(4,15),Rowv=FALSE,Colv=FALSE)
 
-#--------CHECK Part 2-----------------------------
-
-#Part 2 - custom plot of importance scores----
+#custom plot of importance scores----
 setwd(models.dir)
 dat.taxa <-read.csv("geographe_all.var.imp.csv")%>% #from local copy
   rename(resp.var=X)%>%
@@ -270,7 +268,7 @@ re <- colorRampPalette(c("mistyrose", "red2","darkred"))(200)
 # Labels-
 legend_title<-"Importance"
 
-# Annotations----------CHECK IF ANNOTATIONS ARE CORRECT---------------
+# Annotations
 dat.taxa.label<-dat.taxa%>%
   mutate(label=NA)%>%
   mutate(label=ifelse(predictor=="depth"&resp.var=="Carangidae Pseudocaranx spp","X",label)) %>%
@@ -278,6 +276,7 @@ dat.taxa.label<-dat.taxa%>%
   mutate(label=ifelse(predictor=="reef"&resp.var=="Labridae Coris auricularis","X",label)) %>%
   mutate(label=ifelse(predictor=="reef"&resp.var=="species.richness","X",label)) %>%
   mutate(label=ifelse(predictor=="turf.algae"&resp.var=="total.abundance","X",label)) %>% 
+  mutate(label=ifelse(predictor=="seagrasses"&resp.var=="Sparidae Chrysophrys auratus","X",label)) %>% 
   glimpse()
 
 head(dat.taxa.label)
@@ -303,9 +302,9 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
                               "species.richness",
                               "total.abundance"),
                    labels=c("Pseudocaranx spp",
-                            "Parequula Melbournensis",
-                            "Coris Auricularis",
-                            "Chrysophrys Auratus",
+                            "Parequula melbournensis",
+                            "Coris auricularis",
+                            "Chrysophrys auratus",
                             "Species Richness",
                             "Total Abundance"))+
   xlab(NULL)+
@@ -315,50 +314,76 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
   geom_text(aes(label=label))
 gg.importance.scores
 
-#dev.off()
-
-#--------CHECK IF ABOVE IS CORRECT------------------
-
-
+#use dev.off if error above occurs
+dev.off()
 #--------FINISH part 3.....
+### now  make a nice plot of the most interesting models-----
+
+library(gridExtra)
+library(grid)
+# Theme-
+Theme1 <-
+  theme( # use theme_get() to see available options
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    # legend.background = element_rect(fill="white"),
+    legend.background = element_blank(),
+    legend.key = element_blank(), # switch off the rectangle around symbols in the legend
+    legend.text = element_text(size=15),
+    legend.title = element_blank(),
+    legend.position = c(0.2, 0.8),
+    text=element_text(size=15),
+    strip.text.y = element_text(size = 15,angle = 0),
+    axis.title.x=element_text(vjust=0.3, size=15),
+    axis.title.y=element_text(vjust=0.6, angle=90, size=15),
+    axis.text.x=element_text(size=15),
+    axis.text.y=element_text(size=15),
+    axis.line.x=element_line(colour="black", size=0.5,linetype='solid'),
+    axis.line.y=element_line(colour="black", size=0.5,linetype='solid'),
+    strip.background = element_blank())
+
+
 # Manually make the most parsimonious GAM models for each taxa ----
 setwd(models.dir)
   
-# MODEL Bivalve.Dosina.subrosea 500um + distance x Status ----
-dat.bds<-dat%>%filter(Taxa=="BDS") # "Carangidae Pseudocaranx spp"
-gamm=gam(response~s(sqrt.X500um,k=3,bs='cr')+s(distance,k=1,bs='cr', by=Status)+ s(Location,Site,bs="re")+ Status, family=tw(),data=dat.bds)
-
-
-dat.cps <- # filter data --------------
+# Model 1: --------Carangidae Pseudocaranx spp + Depth --------
+dat.cps<-dat%>%filter(Taxa=="Carangidae Pseudocaranx spp") # "Carangidae Pseudocaranx spp"
+gamm=gam(response~s(depth,k=3,bs='cr'),family=tw(),  data=dat.cps)
 gamm <- gam(response~s(depth,k=3,bs='cr'),family=tw(),  data=dat.cps) # change predictor variable per Taxa --------
 
-
-
-#-----------------------simplified for logan-------------------
+#Predict depth from model for Pseudicaranx spp with Depth---
 mod<-gamm
-testdata <- expand.grid(depth=mean(mod$model$depth))%>%
+testdata <- expand.grid(depth=seq(min(dat$depth),max(dat$depth),length.out = 20)) %>% 
   distinct()%>%
   glimpse()
-#
 
 fits <- predict.gam(mod, newdata=testdata, type='response', se.fit=T)
-#head(fits,2)
-predicts.bds.status = testdata%>%data.frame(fits)%>%
-  group_by(Status)%>% #only change here
+predicts.cps.depth = testdata%>%data.frame(fits)%>%
+  group_by(depth)%>% #only change here
   summarise(response=mean(fit),se.fit=mean(se.fit))%>%
   ungroup()
-write.csv(predicts.bds.status,"predicts.csv") #there is some BUG in dplyr - that this fixes
-predicts.bds.status<-read.csv("predicts.csv")%>%
-  glimpse()
-
-predicts.cps = testdata%>%data.frame(fits)%>%
-  summarise(response=mean(fit),se.fit=mean(se.fit))%>%
-  ungroup()
-
-write.csv(predicts.cps,"predicts.csv") #there is some BUG in dplyr - that this fixes
-predicts.cps<-read.csv("predicts.csv")%>%
+write.csv(predicts.cps.depth,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.cps.depth<-read.csv("predicts.csv")%>%
   glimpse()
 
 
+#Plot Model for Pseudicaranx spp with Depth----
+ggmod.cps.depth<- ggplot() +
+  ylab("MaxN")+
+  xlab("Depth")+
+  #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
+  geom_point(data=dat.cps,aes(x=depth,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
+  geom_line(data=predicts.cps.depth,aes(x=depth,y=response),alpha=0.5)+
+  geom_line(data=predicts.cps.depth,aes(x=depth,y=response - se.fit),linetype="dashed",alpha=0.5)+
+  geom_line(data=predicts.cps.depth,aes(x=depth,y=response + se.fit),linetype="dashed",alpha=0.5)+
+  theme_classic()+
+  Theme1+
+  #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
+  annotate("text", x = -Inf, y=Inf, label = "   Pseudocaranx spp ",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  geom_blank(data=dat.cps,aes(x=depth,y=response*1.05))#to nudge data off annotations
+ggmod.cps.depth
+
+
+# Model 2: ----- Total abundance + Turf Algae ----
 
 
