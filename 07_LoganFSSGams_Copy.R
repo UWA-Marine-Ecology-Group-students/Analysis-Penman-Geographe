@@ -342,7 +342,7 @@ Theme1 <-
     strip.background = element_blank())
 
 
-# Manually make the most parsimonious GAM models for each taxa.....1/6 done
+# Manually make the most parsimonious GAM models for each taxa.....3/6 done
 setwd(models.dir)
   
 # Model 1: --------Carangidae Pseudocaranx spp + Depth --------
@@ -387,8 +387,47 @@ predicts.ta.turf<-read.csv("predicts.csv")%>%
   glimpse()
 
 
+# Model 3: --------Gerreidae Parequula melbournensis + Seagrass --------
+dat.mel<-dat%>%filter(Taxa=="Gerreidae Parequula melbournensis") # "Gerreidae Parequula melbournensis"
+gamm=gam(response~s(seagrasses,k=3,bs='cr'),family=tw(),  data=dat.mel)
+gamm <- gam(response~s(seagrasses,k=3,bs='cr'),family=tw(),  data=dat.mel) # change predictor variable per Taxa --------
 
-#-------Plots-------------------------
+#Predict seagrasses for model with Gerreidae Parequula melbournensis---
+mod<-gamm
+testdata <- expand.grid(seagrasses=seq(min(dat$seagrasses),max(dat$seagrasses),length.out = 20)) %>% 
+  distinct()%>%
+  glimpse()
+
+fits <- predict.gam(mod, newdata=testdata, type='response', se.fit=T)
+predicts.mel = testdata%>%data.frame(fits)%>%
+  group_by(seagrasses)%>% #only change here
+  summarise(response=mean(fit),se.fit=mean(se.fit))%>%
+  ungroup()
+write.csv(predicts.mel,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.mel<-read.csv("predicts.csv")%>%
+  glimpse()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------Plots-------------------------
 #Plot Model 1: Pseudocaranx spp with Depth----
 ggmod.cps.depth<- ggplot() +
   ylab("MaxN")+
@@ -418,5 +457,21 @@ ggmod.ta.turf<- ggplot() +
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
   annotate("text", x = -Inf, y=Inf, label = "   Total Abundance ",vjust = 1, hjust = -.1,size=5,fontface="italic")+
-  geom_blank(data=dat.ta,aes(x=depth,y=response*1.05))#to nudge data off annotations
+  geom_blank(data=dat.ta,aes(x=turf.algae,y=response*1.05))#to nudge data off annotations
 ggmod.ta.turf
+
+#Plot Model 3: Gerreidae Parequula melbournensis with seagrasses----
+ggmod.mel.sea<- ggplot() +
+  ylab("MaxN")+
+  xlab("seagrasses")+
+  #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
+  geom_point(data=dat.mel,aes(x=seagrasses,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
+  geom_line(data=predicts.mel.sea,aes(x=seagrasses,y=response),alpha=0.5)+
+  geom_line(data=predicts.mel.sea,aes(x=seagrasses,y=response - se.fit),linetype="dashed",alpha=0.5)+
+  geom_line(data=predicts.mel.sea,aes(x=seagrasses,y=response + se.fit),linetype="dashed",alpha=0.5)+
+  theme_classic()+
+  Theme1+
+  #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
+  annotate("text", x = -Inf, y=Inf, label = "   Pseudocaranx spp ",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  geom_blank(data=dat.mel,aes(x=depth,y=response*1.05))#to nudge data off annotations
+ggmod.mel
