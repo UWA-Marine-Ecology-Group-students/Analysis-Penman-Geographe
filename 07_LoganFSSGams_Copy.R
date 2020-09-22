@@ -113,8 +113,6 @@ round(cor(long.dat[,pred.vars]),2)
 dat <- long.dat
 name<-"geographe"
 
-#-----Above Complete for Fish summaries for Anita -----------
-
 #----------now fit the models---Using Tim Example 2-------------
 
 # Part 1-FSS modeling----
@@ -368,7 +366,30 @@ predicts.cps.depth<-read.csv("predicts.csv")%>%
   glimpse()
 
 
-#Plot Model for Pseudocaranx spp with Depth----
+# Model 2: ----- Total abundance + Turf Algae ----
+dat.ta<-dat%>%filter(Taxa=="total.abundance") # "Total Abundance"
+gamm=gam(response~s(turf.algae,k=3,bs='cr'),family=tw(),  data=dat.ta)
+gamm <- gam(response~s(turf.algae,k=3,bs='cr'),family=tw(),  data=dat.ta) # change predictor variable per Taxa --------
+
+#Predict turf.algae from model for Total Abundance ---
+mod<-gamm
+testdata <- expand.grid(turf.algae=seq(min(dat$turf.algae),max(dat$turf.algae),length.out = 20)) %>% 
+  distinct()%>%
+  glimpse()
+
+fits <- predict.gam(mod, newdata=testdata, type='response', se.fit=T)
+predicts.ta.turf = testdata%>%data.frame(fits)%>%
+  group_by(turf.algae)%>% #only change here
+  summarise(response=mean(fit),se.fit=mean(se.fit))%>%
+  ungroup()
+write.csv(predicts.ta.turf,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.ta.turf<-read.csv("predicts.csv")%>%
+  glimpse()
+
+
+
+#-------Plots-------------------------
+#Plot Model 1: Pseudocaranx spp with Depth----
 ggmod.cps.depth<- ggplot() +
   ylab("MaxN")+
   xlab("Depth")+
@@ -384,7 +405,18 @@ ggmod.cps.depth<- ggplot() +
   geom_blank(data=dat.cps,aes(x=depth,y=response*1.05))#to nudge data off annotations
 ggmod.cps.depth
 
-
-# Model 2: ----- Total abundance + Turf Algae ----
-
-
+#Plot Model 2:  turf.algae from model for Total Abundance ----
+ggmod.ta.turf<- ggplot() +
+  ylab("MaxN")+
+  xlab("Turf Algae (%)")+
+  #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
+  geom_point(data=dat.ta,aes(x=turf.algae,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
+  geom_line(data=predicts.ta.turf,aes(x=turf.algae,y=response),alpha=0.5)+
+  geom_line(data=predicts.ta.turf,aes(x=turf.algae,y=response - se.fit),linetype="dashed",alpha=0.5)+
+  geom_line(data=predicts.ta.turf,aes(x=turf.algae,y=response + se.fit),linetype="dashed",alpha=0.5)+
+  theme_classic()+
+  Theme1+
+  #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
+  annotate("text", x = -Inf, y=Inf, label = "   Total Abundance ",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  geom_blank(data=dat.ta,aes(x=depth,y=response*1.05))#to nudge data off annotations
+ggmod.ta.turf
