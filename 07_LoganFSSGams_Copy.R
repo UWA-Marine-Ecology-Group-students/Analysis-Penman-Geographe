@@ -17,6 +17,7 @@ library(stringr)
 library(readr)
 library(ggplot2)
 library(fst)
+library(cowplot)
 
 
 # Study name---
@@ -30,7 +31,7 @@ working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 em.dir<-paste(working.dir,"EM Export",sep="/")
 models.dir<-paste(working.dir,"Models",sep="/")
-
+plots.dir <- paste(working.dir,"Plots",sep="/")
 # Read in the data----
 setwd(tidy.dir)
 dir()
@@ -289,10 +290,10 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
                             "seagrasses",
                             "reef"),
                    labels=c(
-                     "Depth",
-                     "Turf Algae",
-                     "Seagrass",
-                     "Reef"))+
+                     "Depth (m)",
+                     "Turf Algae (%)",
+                     "Seagrass (%)",
+                     "Reef (%)"))+
   scale_y_discrete(limits = c("Carangidae Pseudocaranx spp",
                               "Gerreidae Parequula melbournensis",
                               "Labridae Coris auricularis",
@@ -312,6 +313,8 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
   geom_text(aes(label=label))
 gg.importance.scores
 
+setwd(plots.dir)
+ggsave("Heatmap_Importance_outputs.png",gg.importance.scores,width = 5,height = 5)
 #use dev.off if error above occurs
 dev.off()
 
@@ -342,7 +345,7 @@ Theme1 <-
     strip.background = element_blank())
 
 
-# Manually make the most parsimonious GAM models for each taxa.....4/6 done
+# Manually make the most parsimonious GAM models for each taxa.....6/6 done
 setwd(models.dir)
   
 # Model 1: --------Carangidae Pseudocaranx spp + Depth --------
@@ -475,7 +478,7 @@ predicts.sr.reef<-read.csv("predicts.csv")%>%
 #Plot Model 1: Pseudocaranx spp with Depth----
 ggmod.cps.depth<- ggplot() +
   ylab("MaxN")+
-  xlab("Depth")+
+  xlab("Depth (m)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
   geom_point(data=dat.cps,aes(x=depth,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
   geom_line(data=predicts.cps.depth,aes(x=depth,y=response),alpha=0.5)+
@@ -484,7 +487,7 @@ ggmod.cps.depth<- ggplot() +
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
-  annotate("text", x = -Inf, y=Inf, label = "   Pseudocaranx spp ",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  annotate("text", x = -Inf, y=Inf, label = "Pseudocaranx spp",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   geom_blank(data=dat.cps,aes(x=depth,y=response*1.05))#to nudge data off annotations
 ggmod.cps.depth
 
@@ -500,14 +503,14 @@ ggmod.ta.turf<- ggplot() +
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
-  annotate("text", x = -Inf, y=Inf, label = "   Total Abundance ",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  annotate("text", x = -Inf, y=Inf, label = "Total Abundance",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   geom_blank(data=dat.ta,aes(x=turf.algae,y=response*1.05))#to nudge data off annotations
 ggmod.ta.turf
 
 #Plot Model 3: Gerreidae Parequula melbournensis with seagrasses----
 ggmod.mel.sea<- ggplot() +
   ylab("MaxN")+
-  xlab("Seagrass")+
+  xlab("Seagrass (%)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
   geom_point(data=dat.mel,aes(x=seagrasses,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
   geom_line(data=predicts.mel.sea,aes(x=seagrasses,y=response),alpha=0.5)+
@@ -516,14 +519,14 @@ ggmod.mel.sea<- ggplot() +
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
-  annotate("text", x = -Inf, y=Inf, label = "   Parequula melbournensis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  annotate("text", x = -Inf, y=Inf, label = "Parequula melbournensis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   geom_blank(data=dat.mel,aes(x=seagrasses,y=response*1.05))#to nudge data off annotations
 ggmod.mel.sea
 
 #Plot Model 4: Chrysophrys auratus with seagrasses----
 ggmod.aur.sea<- ggplot() +
   ylab("MaxN")+
-  xlab("Seagrass")+
+  xlab("Seagrass (%)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
   geom_point(data=dat.aur,aes(x=seagrasses,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
   geom_line(data=predicts.aur.sea,aes(x=seagrasses,y=response),alpha=0.5)+
@@ -532,14 +535,14 @@ ggmod.aur.sea<- ggplot() +
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
-  annotate("text", x = -Inf, y=Inf, label = "  Chrysophrys auratus",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  annotate("text", x = -Inf, y=Inf, label = "Chrysophrys auratus",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   geom_blank(data=dat.aur,aes(x=seagrasses,y=response*1.05))#to nudge data off annotations
 ggmod.aur.sea
 
 #Plot Model 5:  Coris auricularis + reef----
 ggmod.cor.reef<- ggplot() +
   ylab("MaxN")+
-  xlab("Reef")+
+  xlab("Reef (%)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
   geom_point(data=dat.cor,aes(x=reef,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
   geom_line(data=(predicts.cor.reef),aes(x=reef,y=response),alpha=0.5)+
@@ -548,14 +551,14 @@ ggmod.cor.reef<- ggplot() +
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
-  annotate("text", x = -Inf, y=Inf, label = "  Coris auricularis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  annotate("text", x = -Inf, y=Inf, label = "Coris auricularis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   geom_blank(data=dat.cor,aes(x=reef,y=response*1.05))#to nudge data off annotations
 ggmod.cor.reef
 
 #Plot Model 6:  species.richness + reef----
 ggmod.sr.reef<- ggplot() +
   ylab("MaxN")+
-  xlab("Reef")+
+  xlab("Reef (%)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
   geom_point(data=dat.sr,aes(x=reef,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
   geom_line(data=(predicts.sr.reef),aes(x=reef,y=response),alpha=0.5)+
@@ -564,6 +567,14 @@ ggmod.sr.reef<- ggplot() +
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
-  annotate("text", x = -Inf, y=Inf, label = "  Species Richness",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  annotate("text", x = -Inf, y=Inf, label = "Species Richness",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   geom_blank(data=dat.sr,aes(x=reef,y=response*1.05))#to nudge data off annotations
 ggmod.sr.reef
+
+combined.plots <- plot_grid(ggmod.sr.reef, ggmod.ta.turf, 
+                            ggmod.aur.sea, ggmod.cor.reef, 
+                            ggmod.mel.sea, ggmod.cps.depth,
+                            ncol = 2, labels = c("a)", "b)","c)","d)","e)","f)"))
+combined.plots
+setwd(plots.dir)
+ggsave("GAM_outputs.png",combined.plots,width = 9,height = 11)
