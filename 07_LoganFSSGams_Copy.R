@@ -92,7 +92,7 @@ gam.data<-metadata%>%
   dplyr::left_join(.,wide.maxn)%>%
   dplyr::left_join(.,wide.tasr)%>%
   dplyr::left_join(.,habitat)%>%
-  mutate(reef= consolidated + sponges + stony.corals + turf.algae + macroalgae + seagrasses)%>%
+  mutate(reef= consolidated + sponges + stony.corals + turf.algae + macroalgae)%>%
   na.omit()%>%
   glimpse()
 
@@ -106,7 +106,7 @@ pred.vars=c("depth","macroalgae","turf.algae","unconsolidated","seagrasses","con
 #Check for correlations of predictor variables (Removing anything highly correlated (>0.95)--
 round(cor(long.dat[,pred.vars]),2)
 #re-set predictor variables (now containing reef instead)
-pred.vars=c("depth","turf.algae","seagrasses", "reef")
+pred.vars=c("depth","seagrasses", "reef")
 
 # Check to make sure response vector has not more than 80% zeros----check for correlations
 round(cor(long.dat[,pred.vars]),2)
@@ -271,10 +271,10 @@ legend_title<-"Importance"
 dat.taxa.label<-dat.taxa%>%
   mutate(label=NA)%>%
   mutate(label=ifelse(predictor=="depth"&resp.var=="Carangidae Pseudocaranx spp","X",label)) %>%
-  mutate(label=ifelse(predictor=="seagrasses"&resp.var=="Gerreidae Parequula melbournensis","X",label)) %>% 
+  mutate(label=ifelse(predictor=="reef"&resp.var=="Gerreidae Parequula melbournensis","X",label)) %>% 
   mutate(label=ifelse(predictor=="reef"&resp.var=="Labridae Coris auricularis","X",label)) %>%
   mutate(label=ifelse(predictor=="reef"&resp.var=="species.richness","X",label)) %>%
-  mutate(label=ifelse(predictor=="turf.algae"&resp.var=="total.abundance","X",label)) %>% 
+  mutate(label=ifelse(predictor=="reef"&resp.var=="total.abundance","X",label)) %>% 
   mutate(label=ifelse(predictor=="seagrasses"&resp.var=="Sparidae Chrysophrys auratus","X",label)) %>% 
   glimpse()
 
@@ -286,12 +286,10 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
   scale_fill_gradientn(legend_title,colours=c("white", re), na.value = "grey98",
                        limits = c(0, max(dat.taxa.label$importance)))+
   scale_x_discrete(limits=c("depth",
-                            "turf.algae",
                             "seagrasses",
                             "reef"),
                    labels=c(
                      "Depth (m)",
-                     "Turf Algae (%)",
                      "Seagrass (%)",
                      "Reef (%)"))+
   scale_y_discrete(limits = c("Carangidae Pseudocaranx spp",
@@ -314,7 +312,7 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
 gg.importance.scores
 
 setwd(plots.dir)
-ggsave("Heatmap_Importance_outputs.png",gg.importance.scores,width = 5,height = 5)
+ggsave("Heatmap_Importance_outputs.png",gg.importance.scores,width = 4,height = 3)
 #use dev.off if error above occurs
 dev.off()
 
@@ -369,45 +367,45 @@ predicts.cps.depth<-read.csv("predicts.csv")%>%
   glimpse()
 
 
-# Model 2: ----- Total abundance + Turf Algae ----
+# Model 2: ----- Species Total abundance + Reef ----
 dat.ta<-dat%>%filter(Taxa=="total.abundance") # "Total Abundance"
-gamm=gam(response~s(turf.algae,k=3,bs='cr'),family=tw(),  data=dat.ta)
-gamm <- gam(response~s(turf.algae,k=3,bs='cr'),family=tw(),  data=dat.ta) # change predictor variable per Taxa --------
+gamm=gam(response~s(reef,k=3,bs='cr'),family=tw(),  data=dat.ta)
+gamm <- gam(response~s(reef,k=3,bs='cr'),family=tw(),  data=dat.ta) # change predictor variable per Taxa --------
 
-#Predict Total Abundance with turf.algae model ---
+#Predict Total Abundance with reef model ---
 mod<-gamm
-testdata <- expand.grid(turf.algae=seq(min(dat$turf.algae),max(dat$turf.algae),length.out = 20)) %>% 
+testdata <- expand.grid(reef=seq(min(dat$reef),max(dat$reef),length.out = 20)) %>% 
   distinct()%>%
   glimpse()
 
 fits <- predict.gam(mod, newdata=testdata, type='response', se.fit=T)
-predicts.ta.turf = testdata%>%data.frame(fits)%>%
-  group_by(turf.algae)%>% #only change here
+predicts.ta.reef = testdata%>%data.frame(fits)%>%
+  group_by(reef)%>% #only change here
   summarise(response=mean(fit),se.fit=mean(se.fit))%>%
   ungroup()
-write.csv(predicts.ta.turf,"predicts.csv") #there is some BUG in dplyr - that this fixes
-predicts.ta.turf<-read.csv("predicts.csv")%>%
+write.csv(predicts.ta.reef,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.ta.reef<-read.csv("predicts.csv")%>%
   glimpse()
 
 
-# Model 3: --------Gerreidae Parequula melbournensis + Seagrass --------
+# Model 3: --------Gerreidae Parequula melbournensis + Reef --------
 dat.mel<-dat%>%filter(Taxa=="Gerreidae Parequula melbournensis") # "Gerreidae Parequula melbournensis"
-gamm=gam(response~s(seagrasses,k=3,bs='cr'),family=tw(),  data=dat.mel)
-gamm <- gam(response~s(seagrasses,k=3,bs='cr'),family=tw(),  data=dat.mel) # change predictor variable per Taxa --------
+gamm=gam(response~s(reef,k=3,bs='cr'),family=tw(),  data=dat.mel)
+gamm <- gam(response~s(reef,k=3,bs='cr'),family=tw(),  data=dat.mel) # change predictor variable per Taxa --------
 
-#Predict Gerreidae Parequula melbournensis with seagrasses---
+#Predict Gerreidae Parequula melbournensis with reef---
 mod<-gamm
-testdata <- expand.grid(seagrasses=seq(min(dat$seagrasses),max(dat$seagrasses),length.out = 20)) %>% 
+testdata <- expand.grid(reef=seq(min(dat$reef),max(dat$reef),length.out = 20)) %>% 
   distinct()%>%
   glimpse()
 
 fits <- predict.gam(mod, newdata=testdata, type='response', se.fit=T)
-predicts.mel.sea = testdata%>%data.frame(fits)%>%
-  group_by(seagrasses)%>% #only change here
+predicts.mel.reef = testdata%>%data.frame(fits)%>%
+  group_by(reef)%>% #only change here
   summarise(response=mean(fit),se.fit=mean(se.fit))%>%
   ungroup()
-write.csv(predicts.mel.sea,"predicts.csv") #there is some BUG in dplyr - that this fixes
-predicts.mel.sea<-read.csv("predicts.csv")%>%
+write.csv(predicts.mel.reef,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.mel.reef<-read.csv("predicts.csv")%>%
   glimpse()
 
 
@@ -491,37 +489,37 @@ ggmod.cps.depth<- ggplot() +
   geom_blank(data=dat.cps,aes(x=depth,y=response*1.05))#to nudge data off annotations
 ggmod.cps.depth
 
-#Plot Model 2:  turf.algae from model for Total Abundance ----
-ggmod.ta.turf<- ggplot() +
+#Plot Model 2:  Reef from model for Total Abundance ----
+ggmod.ta.reef<- ggplot() +
   ylab("MaxN")+
-  xlab("Turf Algae (%)")+
+  xlab("Reef (%)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
-  geom_point(data=dat.ta,aes(x=turf.algae,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
-  geom_line(data=predicts.ta.turf,aes(x=turf.algae,y=response),alpha=0.5)+
-  geom_line(data=predicts.ta.turf,aes(x=turf.algae,y=response - se.fit),linetype="dashed",alpha=0.5)+
-  geom_line(data=predicts.ta.turf,aes(x=turf.algae,y=response + se.fit),linetype="dashed",alpha=0.5)+
+  geom_point(data=dat.ta,aes(x=reef,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
+  geom_line(data=predicts.ta.reef,aes(x=reef,y=response),alpha=0.5)+
+  geom_line(data=predicts.ta.reef,aes(x=reef,y=response - se.fit),linetype="dashed",alpha=0.5)+
+  geom_line(data=predicts.ta.reef,aes(x=reef,y=response + se.fit),linetype="dashed",alpha=0.5)+
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
   annotate("text", x = -Inf, y=Inf, label = "Total Abundance",vjust = 1, hjust = -.1,size=5,fontface="italic")+
-  geom_blank(data=dat.ta,aes(x=turf.algae,y=response*1.05))#to nudge data off annotations
-ggmod.ta.turf
+  geom_blank(data=dat.ta,aes(x=reef,y=response*1.05))#to nudge data off annotations
+ggmod.ta.reef
 
-#Plot Model 3: Gerreidae Parequula melbournensis with seagrasses----
-ggmod.mel.sea<- ggplot() +
+#Plot Model 3: Gerreidae Parequula melbournensis with reef----
+ggmod.mel.reef<- ggplot() +
   ylab("MaxN")+
-  xlab("Seagrass (%)")+
+  xlab("Reef (%)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
-  geom_point(data=dat.mel,aes(x=seagrasses,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
-  geom_line(data=predicts.mel.sea,aes(x=seagrasses,y=response),alpha=0.5)+
-  geom_line(data=predicts.mel.sea,aes(x=seagrasses,y=response - se.fit),linetype="dashed",alpha=0.5)+
-  geom_line(data=predicts.mel.sea,aes(x=seagrasses,y=response + se.fit),linetype="dashed",alpha=0.5)+
+  geom_point(data=dat.mel,aes(x=reef,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
+  geom_line(data=predicts.mel.reef,aes(x=reef,y=response),alpha=0.5)+
+  geom_line(data=predicts.mel.reef,aes(x=reef,y=response - se.fit),linetype="dashed",alpha=0.5)+
+  geom_line(data=predicts.mel.reef,aes(x=reef,y=response + se.fit),linetype="dashed",alpha=0.5)+
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
   annotate("text", x = -Inf, y=Inf, label = "Parequula melbournensis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
-  geom_blank(data=dat.mel,aes(x=seagrasses,y=response*1.05))#to nudge data off annotations
-ggmod.mel.sea
+  geom_blank(data=dat.mel,aes(x=reef,y=response*1.05))#to nudge data off annotations
+ggmod.mel.reef
 
 #Plot Model 4: Chrysophrys auratus with seagrasses----
 ggmod.aur.sea<- ggplot() +
@@ -571,9 +569,9 @@ ggmod.sr.reef<- ggplot() +
   geom_blank(data=dat.sr,aes(x=reef,y=response*1.05))#to nudge data off annotations
 ggmod.sr.reef
 
-combined.plots <- plot_grid(ggmod.sr.reef, ggmod.ta.turf, 
+combined.plots <- plot_grid(ggmod.sr.reef, ggmod.ta.reef, 
                             ggmod.aur.sea, ggmod.cor.reef, 
-                            ggmod.mel.sea, ggmod.cps.depth,
+                            ggmod.mel.reef, ggmod.cps.depth,
                             ncol = 2, labels = c("a)", "b)","c)","d)","e)","f)"))
 combined.plots
 setwd(plots.dir)
