@@ -106,7 +106,7 @@ pred.vars=c("depth","macroalgae","turf.algae","unconsolidated","seagrasses","con
 #Check for correlations of predictor variables (Removing anything highly correlated (>0.95)--
 round(cor(long.dat[,pred.vars]),2)
 #re-set predictor variables (now containing reef instead)
-pred.vars=c("depth","seagrasses", "reef")
+pred.vars=c("depth","seagrasses", "reef","unconsolidated")
 
 # Check to make sure response vector has not more than 80% zeros----check for correlations
 round(cor(long.dat[,pred.vars]),2)
@@ -272,7 +272,7 @@ dat.taxa.label<-dat.taxa%>%
   mutate(label=NA)%>%
   mutate(label=ifelse(predictor=="depth"&resp.var=="Carangidae Pseudocaranx spp","X",label)) %>%
   mutate(label=ifelse(predictor=="reef"&resp.var=="Gerreidae Parequula melbournensis","X",label)) %>% 
-  mutate(label=ifelse(predictor=="reef"&resp.var=="Labridae Coris auricularis","X",label)) %>%
+  mutate(label=ifelse(predictor=="unconsolidated"&resp.var=="Labridae Coris auricularis","X",label)) %>%
   mutate(label=ifelse(predictor=="reef"&resp.var=="species.richness","X",label)) %>%
   mutate(label=ifelse(predictor=="reef"&resp.var=="total.abundance","X",label)) %>% 
   mutate(label=ifelse(predictor=="seagrasses"&resp.var=="Sparidae Chrysophrys auratus","X",label)) %>% 
@@ -287,11 +287,13 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
                        limits = c(0, max(dat.taxa.label$importance)))+
   scale_x_discrete(limits=c("depth",
                             "seagrasses",
-                            "reef"),
+                            "reef",
+                            "unconsolidated"),
                    labels=c(
                      "Depth (m)",
                      "Seagrass (%)",
-                     "Reef (%)"))+
+                     "Reef (%)",
+                     "Sand (%)"))+
   scale_y_discrete(limits = c("Carangidae Pseudocaranx spp",
                               "Gerreidae Parequula melbournensis",
                               "Labridae Coris auricularis",
@@ -312,9 +314,9 @@ gg.importance.scores <- ggplot(dat.taxa.label, aes(x=predictor,y=resp.var,fill=i
 gg.importance.scores
 
 setwd(plots.dir)
-ggsave("Heatmap_Importance_outputs.png",gg.importance.scores,width = 4,height = 3)
+ggsave("Heatmap_Importance_outputs.png",gg.importance.scores,width = 5,height = 4)
 #use dev.off if error above occurs
-dev.off()
+#dev.off()
 
 
 ### now  make a nice plot of the most interesting models-----
@@ -430,24 +432,24 @@ predicts.aur.sea<-read.csv("predicts.csv")%>%
   glimpse()
 
 
-# Model 5: -------Coris auricularis + Reef --------
+# Model 5: -------Coris auricularis + Unconsolidated --------
 dat.cor<-dat%>%filter(Taxa=="Labridae Coris auricularis") # "Labridae Coris auricularis"
-gamm=gam(response~s(reef,k=3,bs='cr'),family=tw(),  data=dat.cor)
-gamm <- gam(response~s(reef,k=3,bs='cr'),family=tw(),  data=dat.cor) # change predictor variable per Taxa --------
+gamm=gam(response~s(unconsolidated,k=3,bs='cr'),family=tw(),  data=dat.cor)
+gamm <- gam(response~s(unconsolidated,k=3,bs='cr'),family=tw(),  data=dat.cor) # change predictor variable per Taxa --------
 
 #Predict Coris auricularis + Reef---
 mod<-gamm
-testdata <- expand.grid(reef=seq(min(dat$reef),max(dat$reef),length.out = 20)) %>% 
+testdata <- expand.grid(unconsolidated=seq(min(dat$unconsolidated),max(dat$unconsolidated),length.out = 20)) %>% 
   distinct()%>%
   glimpse()
 
 fits <- predict.gam(mod, newdata=testdata, type='response', se.fit=T)
-predicts.cor.reef = testdata%>%data.frame(fits)%>%
-  group_by(reef)%>% #only change here
+predicts.cor.unconsolidated = testdata%>%data.frame(fits)%>%
+  group_by(unconsolidated)%>% #only change here
   summarise(response=mean(fit),se.fit=mean(se.fit))%>%
   ungroup()
-write.csv(predicts.cor.reef,"predicts.csv") #there is some BUG in dplyr - that this fixes
-predicts.cor.reef<-read.csv("predicts.csv")%>%
+write.csv(predicts.cor.unconsolidated,"predicts.csv") #there is some BUG in dplyr - that this fixes
+predicts.cor.unconsolidated<-read.csv("predicts.csv")%>%
   glimpse()
 
 
@@ -538,20 +540,20 @@ ggmod.aur.sea<- ggplot() +
 ggmod.aur.sea
 
 #Plot Model 5:  Coris auricularis + reef----
-ggmod.cor.reef<- ggplot() +
+ggmod.cor.unconsolidated<- ggplot() +
   ylab("MaxN")+
-  xlab("Reef (%)")+
+  xlab("Sand (%)")+
   #scale_color_manual(labels = c("Fished", "SZ"),values=c("red", "black"))+
-  geom_point(data=dat.cor,aes(x=reef,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
-  geom_line(data=(predicts.cor.reef),aes(x=reef,y=response),alpha=0.5)+
-  geom_line(data=(predicts.cor.reef),aes(x=reef,y=response - se.fit),linetype="dashed",alpha=0.5)+
-  geom_line(data=(predicts.cor.reef),aes(x=reef,y=response + se.fit),linetype="dashed",alpha=0.5)+
+  geom_point(data=dat.cor,aes(x=unconsolidated,y=response),  alpha=0.75, size=2,show.legend=FALSE)+
+  geom_line(data=(predicts.cor.unconsolidated),aes(x=unconsolidated,y=response),alpha=0.5)+
+  geom_line(data=(predicts.cor.unconsolidated),aes(x=unconsolidated,y=response - se.fit),linetype="dashed",alpha=0.5)+
+  geom_line(data=(predicts.cor.unconsolidated),aes(x=unconsolidated,y=response + se.fit),linetype="dashed",alpha=0.5)+
   theme_classic()+
   Theme1+
   #annotate("text", x = -Inf, y=Inf, label = "(d)",vjust = 1, hjust = -.1,size=5)+
   annotate("text", x = -Inf, y=Inf, label = "Coris auricularis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
-  geom_blank(data=dat.cor,aes(x=reef,y=response*1.05))#to nudge data off annotations
-ggmod.cor.reef
+  geom_blank(data=dat.cor,aes(x=unconsolidated,y=response*1.05))#to nudge data off annotations
+ggmod.cor.unconsolidated
 
 #Plot Model 6:  species.richness + reef----
 ggmod.sr.reef<- ggplot() +
@@ -570,9 +572,10 @@ ggmod.sr.reef<- ggplot() +
 ggmod.sr.reef
 
 combined.plots <- plot_grid(ggmod.sr.reef, ggmod.ta.reef, 
-                            ggmod.aur.sea, ggmod.cor.reef, 
+                            ggmod.aur.sea, ggmod.cor.unconsolidated, 
                             ggmod.mel.reef, ggmod.cps.depth,
                             ncol = 2, labels = c("a)", "b)","c)","d)","e)","f)"))
 combined.plots
 setwd(plots.dir)
 ggsave("GAM_outputs.png",combined.plots,width = 9,height = 11)
+
