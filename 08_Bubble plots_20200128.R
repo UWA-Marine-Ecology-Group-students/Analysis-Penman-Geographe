@@ -1,7 +1,7 @@
 # Set directories----
 rm(list=ls())
 
-# Study name ----
+ # Study name ----
 study<-"2014-12_Geographe.Bay_stereoBRUVs" 
 
 # Libraries required
@@ -130,11 +130,13 @@ number.of.species <- length(unique(raw.maxn$scientific)) #119
 
 
 # Practice plots
-world <- ne_countries(scale = "medium", returnclass = "sf")
-class(world)
+#world <- ne_countries(scale = "medium", returnclass = "sf")
+#class(world)
 
 summary(maxn)
+#------------------------Habitat Variables----------------------------------
 
+#------Spatial Reef % -------
 spatial.reef<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
   geom_point(data=filter(maxn, reef==0), aes(longitude,latitude,size=reef),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
@@ -150,6 +152,7 @@ spatial.reef<-ggplot() +
 
 spatial.reef
 
+#-----Spatial Seagrasses  %---------
 spatial.seagrasses<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
   geom_point(data=filter(maxn, seagrasses==0), aes(longitude,latitude,size=seagrasses),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
@@ -165,6 +168,23 @@ spatial.seagrasses<-ggplot() +
 
 spatial.seagrasses
 
+#------Spatial Sand %---------
+spatial.unconsolidated<-ggplot() +
+  geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
+  geom_point(data=filter(maxn, unconsolidated==0), aes(longitude,latitude,size=unconsolidated),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, unconsolidated>0),aes(longitude,latitude,size=unconsolidated),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  xlab('Longitude')+
+  ylab('Latitude')+
+  labs(size = "% cover\nsand")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  theme_bw()+
+  theme_collapse+
+  theme.larger.text
+
+spatial.unconsolidated
+
+#----------Response Variables-------------
 
 # SPECIES RICHNESS ----
 spatial.sr<-ggplot() +
@@ -198,129 +218,79 @@ spatial.ta<-ggplot() +
   theme_collapse+
   theme.larger.text
 
-
 spatial.ta
 
-# Nemipterus bathybius ----
-species <- c("Nemipterus bathybius")
+#------Chrysophrys auratus --------------
 
-spatial.bathybius<-ggplot() +
+spatial.auratus<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Nemipterus bathybius")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Nemipterus bathybius")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  geom_point(data=filter(maxn, Sparidae.Chrysophrys.auratus==0), aes(longitude,latitude,size=Sparidae.Chrysophrys.auratus),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, Sparidae.Chrysophrys.auratus>0),aes(longitude,latitude,size=Sparidae.Chrysophrys.auratus),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
   xlab('Longitude')+
   ylab('Latitude')+
-  labs(size = "Relative \nabundance")+
-  #labs(size = " ")+
-  annotate("text",x=193000, y=7606500,label=species,color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
-  annotation_raster(n.b, xmin=196800, xmax=198250, ymin=7605800, ymax=7606600)+
+  
+  labs(size = "Relative\nabundance")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.species+
-  scale_size_continuous(range = c(1, 5),breaks=c(5,10,15,20), name="Relative \nabundance")
+  theme.larger.text
 
-spatial.bathybius
+spatial.auratus
 
+#------Coris auricularis --------------
 
-# Carangoides equula ----
-species <- c("Carangoides equula")
-
-spatial.equula<-ggplot() +
+spatial.auricularis<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Carangoides equula")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Carangoides equula")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  geom_point(data=filter(maxn, Labridae.Coris.auricularis==0), aes(longitude,latitude,size=Labridae.Coris.auricularis),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, Labridae.Coris.auricularis>0),aes(longitude,latitude,size=Labridae.Coris.auricularis),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
   xlab('Longitude')+
   ylab('Latitude')+
-  labs(size = "Relative \nabundance")+
-  #labs(size = " ")+
-  annotate("text",x=193000, y=7606500,label=species,color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
-  annotation_raster(c.e, xmin=196800, xmax=198250, ymin=7605800, ymax=7606600)+
+  
+  labs(size = "Relative\nabundance")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.species
+  theme.larger.text
 
+spatial.auricularis
 
-spatial.equula
+#------Parequula melbournensis --------------
 
-# Dentex carpenteri ----
-species <- c("Dentex carpenteri")
-
-spatial.carpenteri<-ggplot() +
+spatial.melbournensis<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Dentex carpenteri")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Dentex carpenteri")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  geom_point(data=filter(maxn, Gerreidae.Parequula.melbournensis==0), aes(longitude,latitude,size=Gerreidae.Parequula.melbournensis),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, Gerreidae.Parequula.melbournensis>0),aes(longitude,latitude,size=Gerreidae.Parequula.melbournensis),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
   xlab('Longitude')+
   ylab('Latitude')+
-  labs(size = "Relative \nabundance")+
-  #labs(size = " ")+
-  annotate("text",x=193000, y=7606500,label=species,color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
-  annotation_raster(d.c, xmin=196800, xmax=198250, ymin=7605800, ymax=7606750)+
+  
+  labs(size = "Relative\nabundance")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.species
+  theme.larger.text
 
+spatial.melbournensis
 
-spatial.carpenteri
+#------Carangidae.Pseudocaranx.spp --------------
 
-# Synodus variegatus ----
-species <- c("Synodus variegatus")
-
-spatial.variegatus<-ggplot() +
+spatial.Pseudocaranx<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Synodus variegatus")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Synodus variegatus")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  geom_point(data=filter(maxn, Carangidae.Pseudocaranx.spp==0), aes(longitude,latitude,size=Carangidae.Pseudocaranx.spp),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, Carangidae.Pseudocaranx.spp>0),aes(longitude,latitude,size=Carangidae.Pseudocaranx.spp),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
   xlab('Longitude')+
   ylab('Latitude')+
-  labs(size = "Relative \nabundance")+
-  #labs(size = " ")+
-  annotate("text",x=193000, y=7606500,label=species,color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
-  annotation_raster(s.u,xmin=196500, xmax=198250, ymin=7606000, ymax=7606800)+
+  
+  labs(size = "Relative\nabundance")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.species+
-  scale_size_continuous(range = c(1, 5),breaks= c(0,1), name="Relative \nabundance")
+  theme.larger.text
 
-spatial.variegatus
-
-# Decapterus tabl ----
-species <- c("Decapterus tabl")
-
-spatial.tabl<-ggplot() +
-  geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Decapterus tabl")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Decapterus tabl")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
-  xlab('Longitude')+
-  ylab('Latitude')+
-  labs(size = "Relative \nabundance")+
-  annotate("text",x=193000, y=7606500,label=species,color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
-  annotation_raster(d.spp, xmin=196250, xmax=198300, ymin=7605500, ymax=7606700)+
-  theme_bw()+
-  theme_collapse+
-  theme.species
-
-spatial.tabl
-
-
-# Nemipterus virgatus ----
-species <- c("Nemipterus virgatus")
-
-spatial.virgatus<-ggplot() +
-  geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Nemipterus virgatus")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(top.5.maxn,genus.species%in%c("Nemipterus virgatus")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
-  xlab('Longitude')+
-  ylab('Latitude')+
-  labs(size = "Relative \nabundance")+
-  annotate("text",x=193000, y=7606500,label=species,color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
-  annotation_raster(n.v, xmin=196800, xmax=198250, ymin=7605800, ymax=7606600)+
-  theme_bw()+
-  theme_collapse+
-  theme.species+
-  scale_size_continuous(range = c(1,6),breaks= c(0,1,2), name="Relative \nabundance")
-
-spatial.virgatus
-
-
+spatial.Pseudocaranx
 
 # SAVE - Species richness and total abundance combined ----
 setwd(plots.dir)
@@ -331,42 +301,14 @@ ggsave("total.abundance.and.species.richness.potrait.png",ta.sr,dpi=300,width=11
 # ggsave("total.abundance.and.species.richness.landscape1.png",ta.sr,dpi=300,width = 20, height = 5.5,unit="cm") 
 
 # Species specific ----
-species.combined<-plot_grid(spatial.equula, spatial.tabl, 
-                            spatial.carpenteri, spatial.bathybius, 
-                            spatial.virgatus,spatial.variegatus, 
-                            labels = c('A', 'B','C','D','E','F'), label_size = 12,ncol=2)
-ggsave("spatial.species.png",species.combined,dpi=500, width = 21, height = 23,units = "cm")
-
-
-species.combined<-plot_grid(spatial.bathybius, spatial.carpenteri, 
-                            spatial.equula, spatial.tabl, 
-                            spatial.variegatus, spatial.virgatus,
+species.combined<-plot_grid(spatial.sr, spatial.ta, 
+                            spatial.auratus, spatial.auricularis, 
+                            spatial.melbournensis,spatial.Pseudocaranx, 
                             labels = c('A', 'B','C','D','E','F'), label_size = 12,ncol=2)
 ggsave("spatial.species.png",species.combined,dpi=500, width = 21, height = 23,units = "cm")
 
 
 
-
-# Species specific
-species.combined.land<-plot_grid(spatial.equula, spatial.tabl, 
-                            spatial.carpenteri, spatial.bathybius, 
-                            spatial.virgatus,spatial.variegatus, 
-                            labels = c('A', 'B','C','D','E','F'), label_size = 12,ncol=3)
-ggsave("spatial.species.landscape.png",species.combined.land,dpi=100, width = 33, height = 16,units = "cm")
-
-# species.combined1<-plot_grid(spatial.equula, spatial.tabl, 
-#                             labels = c('A', 'B'), label_size = 12,ncol=2)
-# ggsave("spatial.species1.png",species.combined1,dpi=300,width=10,height=3.75)
-# 
-# species.combined2<-plot_grid(spatial.carpenteri, spatial.bathybius, 
-#                              labels = c('C', 'D'), label_size = 12,ncol=2)
-# ggsave("spatial.species2.png",species.combined2,dpi=300,width=10,height=3.75)
-# 
-# species.combined3<-plot_grid(spatial.undosquamis, 
-#                              labels = c('E'), label_size = 12,ncol=2)
-# ggsave("spatial.species3.png",species.combined3,dpi=300,width=15,height=5.75)
-
-  
 # Habitat bubble plots  ----
 glimpse(habitat)
 

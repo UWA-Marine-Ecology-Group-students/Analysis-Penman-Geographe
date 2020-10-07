@@ -1,8 +1,12 @@
 # Set directories----
 rm(list=ls())
 
+## Set your working directory ----
+setwd("~/Github/Analysis-Penman-Geographe")
+working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
+
 # Study name ----
-study <- "2020-01_Guardian-Ningaloo_stereoBRUVs" 
+study<-"2014-12_Geographe.Bay_stereoBRUVs" 
 
 # Libraries required
 install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
@@ -25,16 +29,9 @@ tidy.dir=paste(working.dir,"tidy data",sep="/")
 setwd(tidy.dir)
 dir()
 
-maxn <- read_csv("2020-01_Guardian-Ningaloo_stereoBRUVs.complete.maxn.csv")%>%
+maxn <- read_csv("2014-12_Geographe.Bay_stereoBRUVs.complete.maxn.csv")%>%
   mutate(scientific=paste(family,genus,species,sep=" "))%>%
   glimpse()
-
-# Read in habitat ----
-habitat<-read_csv("2020-01_Guardian-Ningaloo_stereoBRUVs._habitat.csv" )
-
-# Read in metadata ----
-metadata<-read_csv("2020-01_Guardian-Ningaloo_stereoBRUVs.checked.metadata.csv")%>%
-  dplyr::select(sample,latitude,longitude,date,time,site,depth)
 
 # Read in life history
 url <- "https://docs.google.com/spreadsheets/u/1/d/1SMLvR9t8_F-gXapR2EemQMEPSw_bUbPLcXd3lJ5g5Bo/edit?usp=drive_web&ouid=100340010373917954123"
@@ -42,7 +39,7 @@ url <- "https://docs.google.com/spreadsheets/u/1/d/1SMLvR9t8_F-gXapR2EemQMEPSw_b
 master<-read_sheet(url)%>%
   ga.clean.names()%>%
   filter(grepl('Australia', global.region))%>%
-  filter(grepl('NW', marine.region))%>%
+  filter(grepl('SW', marine.region))%>%
   dplyr::select(family,genus,species,iucn.ranking,fishing.mortality,fishing.type,australian.common.name)%>% 
   distinct()%>%
   glimpse()
@@ -75,7 +72,6 @@ cleaned<-species.table%>%
   ## Make names nicer for table
 
 unique(cleaned$fishing.type)
-
 # Descriptive stats
 
 # total abundance
@@ -84,30 +80,3 @@ length(unique(maxn$scientific)) # 16
 
 length(unique(maxn$family)) # 13 families
 length(unique(maxn$genus)) # 14 genus
-
-
-
-# Make data for anita ----
-summary<-maxn%>%
-  #filter(species%in%c("bathybius","carpenteri","tabl","equula","virgatus","variegatus"))%>%
-  group_by(sample,scientific)%>%
-  dplyr::summarise_at(vars(matches("maxn")),funs(sum))%>%
-  mutate(presence=as.integer(maxn != 0))
-  
-presence<-summary%>%
-  dplyr::select(-c(maxn))%>%
-  spread(scientific,value=presence)
-
-maxn.summary<-summary%>%
-  dplyr::select(-c(presence))%>%
-  spread(scientific,value=maxn)
-
-anita.presence<-left_join(metadata,habitat)%>%
-  left_join(presence)
-
-anita.maxn<-left_join(metadata,habitat)%>%
-  left_join(maxn.summary)
-
-setwd(tidy.dir)
-write.csv(anita.presence,"presence.spatial.model.csv",row.names = FALSE)
-write.csv(anita.maxn,"maxn.spatial.model.csv",row.names = FALSE)
