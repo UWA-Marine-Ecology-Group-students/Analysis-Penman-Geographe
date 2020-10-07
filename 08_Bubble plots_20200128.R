@@ -2,7 +2,7 @@
 rm(list=ls())
 
 # Study name ----
-study <- "2020-01_Guardian-Ningaloo_stereoBRUVs" 
+study<-"2014-12_Geographe.Bay_stereoBRUVs" 
 
 # Libraries required
 install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
@@ -41,14 +41,14 @@ se.min <- function(x) (mean(x)) - se(x)
 se.max <- function(x) (mean(x)) + se(x)
 
 theme.larger.text<-theme(
-  strip.text.x = element_text(size = 5,angle = 0),
-  strip.text.y = element_text(size = 5),
+  strip.text.x = element_text(size = 12,angle = 0),
+  strip.text.y = element_text(size = 12),
   axis.title.x=element_text(vjust=-0.0, size=10),
   axis.title.y=element_text(vjust=0.0,size=10),
-  axis.text.x=element_text(size=6),
-  axis.text.y=element_text(size=6),
-  legend.title = element_text(family="TN",size=8),
-  legend.text = element_text(family="TN",size=8))
+  axis.text.x=element_text(size=12),
+  axis.text.y=element_text(size=12),
+  legend.title = element_text(family="TN",size=12),
+  legend.text = element_text(family="TN",size=12))
 
 theme.species<-theme(
   strip.text.x = element_text(size = 8,angle = 0),
@@ -74,109 +74,132 @@ theme_collapse<-theme(      ## the commented values are from theme_grey
   legend.text = element_text(family="TN",size=4))
 
 # Load fish pictures for plotting ----
-setwd(images.dir)
-dir()
+#setwd(images.dir)
+#dir()
 
-n.b <- readPNG("Nemipterus_bathybius_nb_GIBBONS.png")
-n.b <- as.raster(n.b)
+#n.b <- readPNG("Nemipterus_bathybius_nb_GIBBONS.png")
+#n.b <- as.raster(n.b)
 
-n.v <- readPNG("Nemipteridae.png")
-n.v <- as.raster(n.v)
-
-d.spp <- readPNG("Decapterus_spp.png")
-d.spp <- as.raster(d.spp)
-
-s.u <- readPNG("Synodus_variegatus_nb.png")
-s.u <- as.raster(s.u)
-
-c.e <- readPNG("Carangoides_equula_nb_GIBBONS.png")
-c.e <- as.raster(c.e)
-
-d.c <- readPNG("Dentex_carpenteri_nb_GIBBONS.png")
-d.c <- as.raster(d.c)
-
-s.l <- readPNG("Sphyrna_lewini_nb_GIBBONS.png")
-s.l <- as.raster(s.l)
+#n.v <- readPNG("Nemipteridae.png")
+# n.v <- as.raster(n.v)
+# 
+# d.spp <- readPNG("Decapterus_spp.png")
+# d.spp <- as.raster(d.spp)
+# 
+# s.u <- readPNG("Synodus_variegatus_nb.png")
+# s.u <- as.raster(s.u)
+# 
+# c.e <- readPNG("Carangoides_equula_nb_GIBBONS.png")
+# c.e <- as.raster(c.e)
+# 
+# d.c <- readPNG("Dentex_carpenteri_nb_GIBBONS.png")
+# d.c <- as.raster(d.c)
+# 
+# s.l <- readPNG("Sphyrna_lewini_nb_GIBBONS.png")
+# s.l <- as.raster(s.l)
 
 # Read in shapefile ----
 setwd(spatial.dir)
 dir()
 
-shapefile <- readOGR(spatial.dir, "studypolygon")
+shapefile <- readOGR(spatial.dir, "Australiaboundary67")
 shapefile_df <- fortify(shapefile)
 
 # read in maxn
 setwd(tidy.dir)
 dir()
 
-maxn <- read.csv("2020-01_Guardian-Ningaloo_stereoBRUVs.complete.maxn.csv")%>%
-  mutate(sample=str_pad(sample,2,side="left",pad="0"))
+maxn <- read.csv("2014-12_Geographe.Bay_stereoBRUVs.gamdata.csv")%>%
+  mutate(reef= consolidated + sponges + stony.corals + turf.algae + macroalgae)
+  #mutate(sample=str_pad(sample,2,side="left",pad="0"))
 
-metadata <- read.csv("2020-01_Guardian-Ningaloo_stereoBRUVs.checked.metadata.csv")%>%
-  mutate(sample=str_pad(sample,2,side="left",pad="0"))
+#metadata <- read.csv("2020-01_Guardian-Ningaloo_stereoBRUVs.checked.metadata.csv")%>%
+#  mutate(sample=str_pad(sample,2,side="left",pad="0"))
 
-habitat<-read_csv("2020-01_Guardian-Ningaloo_stereoBRUVs._habitat.csv" )%>%
-  ga.clean.names()
+#habitat<-read_csv("2020-01_Guardian-Ningaloo_stereoBRUVs._habitat.csv" )%>%
+ # ga.clean.names()
 
-# workout total abundance and species richness
-maxn.ta.sr <- maxn%>%
-  group_by(scientific,sample)%>%
-  dplyr::summarise(maxn = sum(maxn))%>%
-  spread(scientific,maxn, fill = 0)%>%
-  mutate(total.abundance=rowSums(.[,2:(ncol(.))],na.rm = TRUE ))%>% #Add in Totals
-  mutate(species.richness=rowSums(.[,2:17] > 0))%>%
-  dplyr::select(sample,total.abundance,species.richness)%>%
-  gather(.,"scientific","maxn",2:3)%>%
-  left_join(metadata)
 
-# Format maxn for species specific plots
-unique(maxn$scientific)
+# descriptive stats
+raw.maxn <- read.csv("2014-12_Geographe.Bay_stereoBRUVs.complete.maxn.csv"   )
 
-top.5<-c("Nemipterus bathybius",
-         "Dentex carpenteri",
-         "Decapterus tabl",
-         "Carangoides equula",
-         "Synodus variegatus",
-         "Nemipterus virgatus")
+total.number <-sum(raw.maxn$maxn) #9641 fish
+number.of.families <- length(unique(raw.maxn$family)) #53
+number.of.genus <- length(unique(raw.maxn$genus)) # 96
+number.of.species <- length(unique(raw.maxn$scientific)) #119
 
-top.5.maxn<-maxn%>%
-  mutate(genus.species=paste(genus,species,sep=" "))%>%
-  filter(genus.species%in%c(top.5))
 
 # Practice plots
 world <- ne_countries(scale = "medium", returnclass = "sf")
 class(world)
 
-# TOTAL ABUNDANCE ----
-spatial.ta<-ggplot() +
+summary(maxn)
+
+spatial.reef<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(maxn.ta.sr,scientific%in%c("total.abundance")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(maxn.ta.sr,scientific%in%c("total.abundance")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  geom_point(data=filter(maxn, reef==0), aes(longitude,latitude,size=reef),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, reef>0),aes(longitude,latitude,size=reef),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
   xlab('Longitude')+
   ylab('Latitude')+
-  labs(size = "Total\nabundance")+
-  annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  labs(size = "% cover\nreef")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
   theme.larger.text
 
-spatial.ta
+spatial.reef
+
+spatial.seagrasses<-ggplot() +
+  geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
+  geom_point(data=filter(maxn, seagrasses==0), aes(longitude,latitude,size=seagrasses),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, seagrasses>0),aes(longitude,latitude,size=seagrasses),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  xlab('Longitude')+
+  ylab('Latitude')+
+  labs(size = "% cover\nseagrasses")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  theme_bw()+
+  theme_collapse+
+  theme.larger.text
+
+spatial.seagrasses
+
 
 # SPECIES RICHNESS ----
 spatial.sr<-ggplot() +
   geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
-  geom_point(data=filter(maxn.ta.sr,scientific%in%c("species.richness")&maxn==0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
-  geom_point(data=filter(maxn.ta.sr,scientific%in%c("species.richness")&maxn>0),aes(longitude.zone50,latitude.zone50,size=maxn),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  geom_point(data=filter(maxn, species.richness==0), aes(longitude,latitude,size=species.richness),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, species.richness>0),aes(longitude,latitude,size=species.richness),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
   xlab('Longitude')+
   ylab('Latitude')+
-  labs(size = "Species\nrichness")+
-  annotate("text",x=193000, y=7606500,label="Species richness",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   
+  labs(size = "Species\nrichness")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
   theme.larger.text
 
 spatial.sr
+
+# TOTAL ANBUNDANCE ----
+spatial.ta<-ggplot() +
+  geom_polygon(data = shapefile_df, aes(x = long, y = lat, group = group),color = 'black', fill = 'grey90', size = .2)+
+  geom_point(data=filter(maxn, total.abundance==0), aes(longitude,latitude,size=total.abundance),shape=21,colour="dodgerblue4",fill="white",alpha=0.75)+
+  geom_point(data=filter(maxn, total.abundance>0),aes(longitude,latitude,size=total.abundance),shape=21,colour="dodgerblue4",fill="dodgerblue2",alpha=0.75)+
+  xlab('Longitude')+
+  ylab('Latitude')+
+  
+  labs(size = "Total\nabundance")+
+  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  theme_bw()+
+  theme_collapse+
+  theme.larger.text
+
+
+spatial.ta
 
 # Nemipterus bathybius ----
 species <- c("Nemipterus bathybius")
