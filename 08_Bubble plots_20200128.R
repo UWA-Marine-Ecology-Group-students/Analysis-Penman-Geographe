@@ -33,6 +33,7 @@ working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory
 plots.dir=paste(working.dir,"plots",sep="/")
 tidy.dir=paste(working.dir,"tidy data",sep="/")
 images.dir=paste(working.dir,"images",sep="/")
+#fish.pics=paste(working.dir,"Fish pics",sep="/")
 spatial.dir=paste(working.dir,"spatial",sep="/")
 
 # functions for summarising data on plots----
@@ -73,30 +74,7 @@ theme_collapse<-theme(      ## the commented values are from theme_grey
   legend.title = element_text(family="TN",size=6),
   legend.text = element_text(family="TN",size=4))
 
-# Load fish pictures for plotting ----
-#setwd(images.dir)
-#dir()
 
-#n.b <- readPNG("Nemipterus_bathybius_nb_GIBBONS.png")
-#n.b <- as.raster(n.b)
-
-#n.v <- readPNG("Nemipteridae.png")
-# n.v <- as.raster(n.v)
-# 
-# d.spp <- readPNG("Decapterus_spp.png")
-# d.spp <- as.raster(d.spp)
-# 
-# s.u <- readPNG("Synodus_variegatus_nb.png")
-# s.u <- as.raster(s.u)
-# 
-# c.e <- readPNG("Carangoides_equula_nb_GIBBONS.png")
-# c.e <- as.raster(c.e)
-# 
-# d.c <- readPNG("Dentex_carpenteri_nb_GIBBONS.png")
-# d.c <- as.raster(d.c)
-# 
-# s.l <- readPNG("Sphyrna_lewini_nb_GIBBONS.png")
-# s.l <- as.raster(s.l)
 
 # Read in shapefile ----
 setwd(spatial.dir)
@@ -144,11 +122,12 @@ spatial.reef<-ggplot() +
   xlab('Longitude')+
   ylab('Latitude')+
   labs(size = "% cover\nreef")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
 
 spatial.reef
 
@@ -160,11 +139,12 @@ spatial.seagrasses<-ggplot() +
   xlab('Longitude')+
   ylab('Latitude')+
   labs(size = "% cover\nseagrasses")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
 
 spatial.seagrasses
 
@@ -176,13 +156,20 @@ spatial.unconsolidated<-ggplot() +
   xlab('Longitude')+
   ylab('Latitude')+
   labs(size = "% cover\nsand")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
 
 spatial.unconsolidated
+
+# Species specific ----
+habitat.combined<-plot_grid(spatial.reef, spatial.seagrasses, spatial.unconsolidated, 
+                            labels = c('a)', 'b)','c)'), label_size = 10,ncol=1)
+ggsave("spatial.habitat.png",habitat.combined,dpi=500, width = 21, height = 23,units = "cm")
+
 
 #----------Response Variables-------------
 
@@ -195,11 +182,13 @@ spatial.sr<-ggplot() +
   ylab('Latitude')+
   
   labs(size = "Species\nrichness")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  #annotate("text", x = -Inf, y=-Inf, label = "Species richness",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
 
 spatial.sr
 
@@ -212,11 +201,13 @@ spatial.ta<-ggplot() +
   ylab('Latitude')+
   
   labs(size = "Total\nabundance")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  
+  #annotate("text", x = -Inf, y=Inf, label = "Total abundance",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
 
 spatial.ta
 
@@ -230,11 +221,11 @@ spatial.auratus<-ggplot() +
   ylab('Latitude')+
   
   labs(size = "Relative\nabundance")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
-  #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  #annotate("text", x = -Inf, y=Inf, label = "Chrysophrys auratus",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
 
 spatial.auratus
 
@@ -248,11 +239,13 @@ spatial.auricularis<-ggplot() +
   ylab('Latitude')+
   
   labs(size = "Relative\nabundance")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+ 
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  #annotate("text", x = -Inf, y=Inf, label = "Coris auricularis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
 
 spatial.auricularis
 
@@ -266,11 +259,14 @@ spatial.melbournensis<-ggplot() +
   ylab('Latitude')+
   
   labs(size = "Relative\nabundance")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  #annotate("text", x = -Inf, y=Inf, label = "Parequula melbournensis",vjust = 1, hjust = -.1,size=5,fontface="italic")+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))#+
+  #coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3),ratio=1)
 
 spatial.melbournensis
 
@@ -284,30 +280,35 @@ spatial.Pseudocaranx<-ggplot() +
   ylab('Latitude')+
   
   labs(size = "Relative\nabundance")+
-  coord_cartesian(xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))+
+  
   #annotate("text",x=193000, y=7606500,label="Total abundance",color="Black",hjust=0,family="TN",cex=3.5,fontface="italic")+
+  #annotate("text", x = -Inf, y=Inf, label = "Pseudocaranx spp",vjust = 1, hjust = -.1,size=5,fontface="italic")+
+  #(annotation_raster)(spp,xmin=0.275, xmax=0.38, ymin=0.627, ymax=0.675)+
   theme_bw()+
   theme_collapse+
-  theme.larger.text
+  theme.larger.text+
+  coord_fixed(ratio=1,xlim = c(115.0,115.7), ylim = c(-33.7,-33.3))
+
 
 spatial.Pseudocaranx
 
 # SAVE - Species richness and total abundance combined ----
 setwd(plots.dir)
-ta.sr<-plot_grid(spatial.ta, spatial.sr, labels = c('A', 'B'), label_size = 12,ncol=1)
+ta.sr<-plot_grid(spatial.ta, spatial.sr, labels = c('a)', 'b)'), label_size = 12,ncol=1)
 ggsave("total.abundance.and.species.richness.potrait.png",ta.sr,dpi=300,width=11,height=17.5,unit="cm")
 # 
 # ta.sr<-plot_grid(spatial.ta, spatial.sr, labels = c('A', 'B'), label_size = 12,ncol=2)
 # ggsave("total.abundance.and.species.richness.landscape1.png",ta.sr,dpi=300,width = 20, height = 5.5,unit="cm") 
 
+
 # Species specific ----
 species.combined<-plot_grid(spatial.sr, spatial.ta, 
                             spatial.auratus, spatial.auricularis, 
                             spatial.melbournensis,spatial.Pseudocaranx, 
-                            labels = c('A', 'B','C','D','E','F'), label_size = 12,ncol=2)
+                            labels = c('a)', 'b)','c)','d)','e)','f)'), label_size = 10,ncol=2)
 ggsave("spatial.species.png",species.combined,dpi=500, width = 21, height = 23,units = "cm")
 
-
+#-----combine plots
 
 # Habitat bubble plots  ----
 glimpse(habitat)
