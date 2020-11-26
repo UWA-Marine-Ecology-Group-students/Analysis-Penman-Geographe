@@ -8,7 +8,6 @@ install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
 # To connect to life.history
 library(httpuv)
-library(googlesheets)
 # To tidy data
 library(tidyr)
 library(plyr)
